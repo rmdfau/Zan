@@ -1,0 +1,9 @@
+{
+  "protocol": "http",
+  "host": "",
+  "port": 8080,
+  "auth": {
+    "username": "",
+    "password": ""
+  }
+}

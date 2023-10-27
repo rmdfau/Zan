@@ -38,7 +38,7 @@ const sendotp = async ({ phone, useragent }) => {
     })
     return res?.data
   } catch (err) {
-    console.log(err)
+    // console.log(err)
     return null
   }
 }
@@ -79,7 +79,7 @@ const register = async ({ phone, useragent, password, otp, kodereff }) => {
     })
     return res?.data
   } catch (err) {
-    console.log(err)
+    // console.log(err)
     return null
   }
 }
@@ -199,10 +199,20 @@ const main = async () => {
           const phone = `${generateRandomIndonesianPhoneNumber()}`
 
           console.log(chalk.yellow(`${index} ${phone}`))
+          const resotp = await sendotp({
+            phone,
+            useragent,
+          })
 
+          if (resotp?.success !== true) {
+            console.log(
+              chalk.red(`${index} ${resotp?.message || "Terjadi kesalahan"}`)
+            )
+            continue
+          }
           const data = {
             phone,
-            otp: 123456,
+            otp: resotp?.code,
             useragent,
             password: passakun,
             kodereff,
@@ -271,10 +281,22 @@ const main = async () => {
             const phone = `${generateRandomIndonesianPhoneNumber()}`
 
             console.log(chalk.yellow(`${jumlahinvite} ${phone}`))
+            const resotp = await sendotp({
+              phone,
+              useragent,
+            })
 
+            if (resotp?.success !== true) {
+              console.log(
+                chalk.red(
+                  `${jumlahinvite} ${resotp?.message || "Terjadi kesalahan"}`
+                )
+              )
+              continue
+            }
             const data = {
               phone,
-              otp: 12345,
+              otp: resotp?.code,
               useragent,
               password: passakun,
               kodereff: checkstatusres?.data?.user,
@@ -313,135 +335,6 @@ const main = async () => {
             console.log(`Selesai bang!\n`)
             process.exit()
           }
-        }
-      }
-      break
-    case "2":
-      {
-        //load akun from file akun-neutrino.txt
-        const daycheck = readline.question("Day checkin : ")
-        const akun = fs
-          .readFileSync("akun-neutrino.txt", "utf-8")
-          .split("\n")
-          .filter((x) => x !== "")
-        console.log(`[x] Total akun ${akun.length}\n`)
-        let index = 0
-        //looping akun and login
-        while (index <= akun.length - 1) {
-          const phone = akun[index].split("|")[0]
-          const passakun = akun[index].split("|")[1]
-          const useragent = await randUserAgent()
-
-          console.log(`[+] Login akun ${index + 1} - ${phone}`)
-          const loginres = await login(phone, passakun, useragent)
-          if (!loginres?.success) {
-            console.log(chalk.red(`${index + 1} ${loginres?.message}`))
-            continue
-          }
-          console.log(chalk.green(`[+] ${loginres?.message}`))
-
-          const checkstatusres = await checkStatus(loginres?.token, useragent)
-          if (!checkstatusres?.authenticated) {
-            console.log(chalk.red(`${index + 1} ${checkstatusres?.message}`))
-            continue
-          }
-          const checkinres = await checkin(daycheck, loginres?.token, useragent)
-          if (!checkinres?.success) {
-            console.log(chalk.red(`[+] ${checkinres?.message}`))
-            console.log("")
-            index++
-            continue
-          }
-          console.log(chalk.green(`[+] ${checkinres?.message}`))
-          console.log(`[+] Mengerjakan misi invite`)
-          let jumlahinvite = 1
-          while (true) {
-            const useragent = await randUserAgent()
-            const phone = `${generateRandomIndonesianPhoneNumber()}`
-
-            console.log(chalk.yellow(`${jumlahinvite} ${phone}`))
-
-            const data = {
-              phone,
-              otp: 12345,
-              useragent,
-              password: passakun,
-              kodereff: checkstatusres?.data?.user,
-            }
-            const res = await register(data)
-
-            if (!res?.success) {
-              console.log(
-                chalk.red(
-                  `${jumlahinvite} ${res?.message || "Terjadi kesalahan"}`
-                )
-              )
-              continue
-            }
-            console.log(chalk.green(`${jumlahinvite} ${res?.message}`))
-            jumlahinvite++
-            if (jumlahinvite > 3) {
-              break
-            }
-          }
-          const claimres = await claimReff(loginres?.token, useragent)
-          if (!claimres?.success) {
-            console.log(chalk.red(`${index} ${claimres?.message}`))
-            continue
-          }
-          console.log(chalk.green(`${index} ${claimres?.message}`))
-          const luckydrawres = await lucckyDraw(loginres?.token, useragent)
-          if (!luckydrawres?.success) {
-            console.log(chalk.red(`${index} ${luckydrawres?.message}`))
-            continue
-          }
-          console.log(chalk.green(`${index} ${luckydrawres?.winner?.name}`))
-          console.log("")
-
-          console.log(`[+] checkin      : ${checkstatusres?.data?.checkin}
-[+] balance(IDR) : ${checkstatusres?.data?.amount}
-[+] balance(XTN) : ${checkstatusres?.data?.coin}
-          `)
-          console.log("")
-          // return
-          index++
-        }
-      }
-      break
-    case "3":
-      {
-        //load akun from file akun-neutrino.txt
-        const akun = fs
-          .readFileSync("akun-neutrino.txt", "utf-8")
-          .split("\n")
-          .filter((x) => x !== "")
-        console.log(`[x] Total akun ${akun.length}\n`)
-        let index = 0
-        //looping akun and login
-        while (index <= akun.length - 1) {
-          const phone = akun[index].split("|")[0]
-          const passakun = akun[index].split("|")[1]
-          const useragent = await randUserAgent()
-
-          console.log(`[+] Login akun ${index + 1} - ${phone}`)
-          const loginres = await login(phone, passakun, useragent)
-          if (!loginres?.success) {
-            console.log(chalk.red(`${index + 1} ${loginres?.message}`))
-            continue
-          }
-          console.log(chalk.green(`[+] ${loginres?.message}`))
-          const checkstatusres = await checkStatus(loginres?.token, useragent)
-          if (!checkstatusres?.authenticated) {
-            console.log(chalk.red(`${index + 1} ${checkstatusres?.message}`))
-            continue
-          }
-          console.log(`[+] checkin      : ${checkstatusres?.data?.checkin}
-[+] balance(IDR) : ${checkstatusres?.data?.amount}
-[+] balance(XTN) : ${checkstatusres?.data?.coin}
-          `)
-          console.log("")
-          // return
-          index++
         }
       }
       break
